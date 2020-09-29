@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改评估项目')" />
+    <th:block th:include="include :: ztree-css" />
+    <th:block th:include="include :: summernote-css" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-assess-edit" th:object="${sAssess}">
+            <input name="id" id="id" th:field="*{id}" type="hidden">
+            <input name="sortId"  type="hidden"  th:field="*{sortId}" id="treeId"/>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">状态：</label>
+                <div class="col-sm-10">
+                    <label class="toggle-switch switch-solid">
+                        <input type="checkbox" id="status" th:checked="${sAssess.status == '0' ? true : false}">
+                        <span></span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-2 control-label">归属KPI指标：</label>
+                <div class="col-sm-10">
+                    <div class="input-group">
+                        <input class="form-control" type="text" name="sortName" onclick="selectSortTree()" id="treeName" th:field="*{sortName}" required>
+                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-2 control-label">评估项目：</label>
+                <div class="col-sm-10">
+                    <input name="assessName" th:field="*{assessName}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-2 control-label">分值：</label>
+                <div class="col-sm-10">
+                    <input name="score" th:field="*{score}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-2 control-label">衡量标准：</label>
+                <div class="col-sm-10">
+                    <input id="criteriaName" name="criteriaName" th:field="*{criteriaName}" type="hidden">
+                    <div id="editor" class="summernote"></div>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-2 control-label">考核部门：</label>
+                <div class="col-sm-10">
+                     <input name="supplierDept" th:field="*{supplierDept}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">部门权限</label>
+                <div class="col-sm-10">
+                    <div id="deptTrees" class="ztree"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: ztree-js" />
+    <th:block th:include="include :: summernote-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/assess";
+
+        $(function() {
+            var url = ctx + "system/dept/assessDeptTreeData?id=" + $("#id").val();
+            var options = {
+                id: "deptTrees",
+                url: url,
+                check: { enable: true },
+                expandLevel: 2
+            };
+            $.tree.init(options);
+
+            $('.summernote').summernote({
+                placeholder: '请输入衡量标准',
+                height : 192,
+                lang : 'zh-CN',
+                toolbar: [
+                    [ 'style', [ 'style' ] ],
+                    [ 'font', [ 'bold', 'italic', 'underline',  'clear'] ],
+                    [ 'fontname', [ 'fontname' ] ],
+                    [ 'fontsize', [ 'fontsize' ] ],
+                    [ 'color', [ 'color' ] ],
+                    [ 'para', [ 'ol', 'ul', 'paragraph', 'height' ] ],
+                ],
+                followingToolbar: false
+            });
+            var content = $("#criteriaName").val();
+            $('#editor').summernote('code', content);
+        });
+
+        $("#form-assess-edit").validate({
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+            	var sHTML = $('.summernote').summernote('code');
+                $("#criteriaName").val(sHTML);
+                var data = $("#form-assess-edit").serializeArray();
+                var status = $("input[id='status']").is(':checked') == true ? 0 : 1;
+                var deptIds = $.tree.getCheckedNodes();
+                data.push({"name": "status", "value": status});
+                data.push({"name": "deptIds", "value": deptIds});
+                $.operate.save(prefix + "/edit", data);
+            }
+        }
+
+        function selectSortTree() {
+            var options = {
+                title: '类目选择',
+                width: "380",
+                url: ctx + "supplier/sort/selectSortTree/" + $("#treeId").val(),
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero){
+            var tree = layero.find("iframe")[0].contentWindow.$._tree;
+            if ($.tree.notAllowParents(tree)) {
+                var body = layer.getChildFrame('body', index);
+                $("#treeId").val(body.find('#treeId').val());
+                $("#treeName").val(body.find('#treeName').val());
+                layer.close(index);
+            }
+        }
+    </script>
+</body>
+</html>

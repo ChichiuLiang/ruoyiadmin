@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('美体内衣工厂绩效考评列表')" />
+    <th:block th:include="include :: select2-css" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                	<!-- <input type="hidden" name="status" value="3"/> -->
+                    <div class="select-list">
+                        <ul>
+                        	<li>
+								<label>考核类型：</label>
+								<select class="form-control" name="kpiType" >
+										<option value="">所有</option>
+										<option th:each="type : ${vKpiInfoList}" th:text="${type.typeName}" th:value="${type.kpiType}"></option>
+								</select>
+							</li>
+                            <li>
+                                <label>年份：</label>
+                                <input type="text" name="year"/>
+                            </li>
+                            <li>
+                                <label>季度：</label>
+                                <input type="text" name="quarter"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success single disabled" onclick="" shiro:hasPermission="supplier:kpiReport:export">
+                    <i class="fa fa-plus"></i> 导出
+                </a>
+                <a class="btn btn-info single disabled" onclick="toDownload()" shiro:hasPermission="supplier:kpiReport:download">
+                    <i class="fa fa-upload"></i> 下载附件
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-bordered">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: select2-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/kpi";
+
+        $(function() {
+            var options = {
+                url: prefix + "/reportList",
+                showToggle: false,
+		        showColumns: false,
+		        detailView: true,
+		        clickToSelect:true,
+		        modalName: "供应商绩效考核报表",
+				onExpandRow : function(index, row, $detail) {
+					initChildTable(index, row, $detail);
+				},
+                columns: [{
+                    radio: true
+                },
+                {
+                    field: 'typeName',
+                    title: '考核类型'
+                },
+                {
+                    field: 'year',
+                    title: '年份'
+                },
+                {
+                    field: 'quarter',
+                    title: '季度'
+                },
+                {
+                    field: 'kpiSupplierName',
+                    title: '考核对象'
+                }]
+            };
+            $.table.init(options);
+        });
+        
+        initChildTable = function(index, row, $detail) {
+			var childTable = $detail.html('<table style="table-layout:fixed"></table>').find('table');
+    	    $(childTable).bootstrapTable({
+    	        url: prefix + "/reportChildlist",
+    	        method: 'post',
+    	        contentType: "application/x-www-form-urlencoded",
+    	        queryParams : {
+                    kpiType: row.kpiType,
+                    year : row.year,
+                    quarter : row.quarter,
+                    kpiSupplierId : row.kpiSupplierId
+                    //status:3
+				},
+				onLoadSuccess: function (data) {
+					var kpiType = row.kpiType;
+					if(kpiType == 1 || kpiType == 5){
+						$.table.mergeCells(data.rows, "threeSortName",null, childTable);
+	                	$.table.mergeCells(data.rows, "twoSortName","threeSortName", childTable);
+					}else if(kpiType == 2 || kpiType == 3 || kpiType == 4){
+						$.table.mergeCells(data.rows, "twoSortName",null, childTable);
+					}
+					$.table.mergeCells(data.rows, "assessName",null, childTable,["assessScore","criteriaName"]);
+	            },
+    	        columns: getColumns(row)
+    	    });
+		};
+		
+		function getColumns(row){
+			var kpiType = row.kpiType;
+			var skpi = {"kpiType":kpiType,"year":row.year,"quarter":row.quarter};
+			var twoSortName = {field: 'twoSortName',title: 'KPI指标',width: '80px',align: 'center'};
+			var threeSortName = {field: 'threeSortName',title: 'KPI指标',width: '80px',align: 'center'};
+			var assessName = {field: 'assessName',title: '评估项目',width: '200px',align: 'center',formatter: function(value, row, index) {return $.table.tooltip(value);}};
+			var assessScore = {field: 'assessScore',title: '分值',width: '50px',align: 'center'};
+			var criteriaName = {field: 'criteriaName',title: '衡量标准',width: '200px',align: 'center',formatter: function(value, row, index) {var str = value.replace(/<p>/g,'');str = str.replace(/<\/p>/g,'\n');str = str.replace(/<\/p>/g,'\n');return $.table.tooltip(str);}};
+			var supplierDept = {field: 'supplierDept',title: '考核部门',width: '100px',align: 'center'}; 
+			var scoreValue = {field: 'score0',title: '评分',width: '80px',align: 'center'}; 
+        	var remark = {field: 'basis0',title: '备注',align: 'center'};
+        	var deptName = {field: 'deptName',title: '考核部门',align: 'center',width: '100px'};
+        	
+        	var columnsArray = [];
+        	columnsArray.push(twoSortName);
+			if(kpiType == 1 || kpiType == 5){
+				columnsArray.push(threeSortName);
+			}
+			
+			if(kpiType == 1 || kpiType == 2 || kpiType == 3){
+				columnsArray.push(assessName);
+				columnsArray.push(assessScore);
+				columnsArray.push(criteriaName);
+				columnsArray.push(deptName);
+			}
+			
+			if(kpiType == 1){
+				$.ajax({
+			           async: false,
+			           type: "POST",
+			           url: prefix + "/getSupplierBySKpi",
+			           data: JSON.stringify(skpi),
+			           contentType: "application/json;charset=utf-8",
+			           dataType: "json",
+			           json: 'callback',
+			           success: function (json) {
+			        	   //console.log(json);
+			        	   map = $.common.objToStrMap(json);
+			        	   map.forEach(function(value,key){
+			        		   var str = key.split(",");
+			        		   columnsArray.push({
+			                       title: value,
+			                       field: "score" + str[1],
+			                       align: 'center',
+			                       width:50
+			                   });
+			        	   });
+			           }
+				    }); 
+					
+				columnsArray.push(remark);
+			}else if(kpiType == 2 || kpiType == 3){
+				$.ajax({
+			           async: false,
+			           type: "POST",
+			           url: prefix + "/getSupplierBySKpi",
+			           data: JSON.stringify(skpi),
+			           contentType: "application/json;charset=utf-8",
+			           dataType: "json",
+			           json: 'callback',
+			           success: function (json) {
+			        	   //console.log(json);
+			        	   map = $.common.objToStrMap(json);
+			        	   map.forEach(function(value,key){
+			        		   var str = key.split(",");
+			        		   columnsArray.push({
+			                       title: value,
+			                       field: "score" + str[1],
+			                       align: 'center',
+			                       width:50
+			                   });
+			        		   columnsArray.push({
+			                       title: '依据',
+			                       field: "basis" + str[1],
+			                       align: 'center'
+			                   });
+			        	   });
+			           }
+				    });
+			}
+			
+			if(kpiType == 4){
+				columnsArray.push(assessName);
+				columnsArray.push(assessScore);
+				columnsArray.push(supplierDept);
+				columnsArray.push(scoreValue);
+				columnsArray.push(remark);
+			}
+			
+			if(kpiType == 5){
+				columnsArray.push(assessName);
+				columnsArray.push(assessScore);
+				columnsArray.push(criteriaName);
+				columnsArray.push(scoreValue);
+				columnsArray.push(remark);
+			}
+        	
+	        return columnsArray;
+    	}
+		
+		function toDownload(){
+			table.set();
+			var row = $("#" + table.options.id).bootstrapTable('getSelections')[0];
+			//var url = prefix + "/download?status=3&kpiType="+row.kpiType+"&year="+row.year+"&quarter="+row.quarter;
+			var url = prefix + "/download?kpiType="+row.kpiType+"&year="+row.year+"&quarter="+row.quarter;
+			if(row.kpiSupplierId)
+				url = url + "&supplierId="+row.kpiSupplierId;
+        	$.modal.openTab("下载文件", url);
+		}
+    </script>
+</body>
+</html>

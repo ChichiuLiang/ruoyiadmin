@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.supplier.mapper.SSupplierMapper">
+    
+        <resultMap type="SSupplier" id="SSupplierResult">
+        <result property="id"    column="id"    />
+<!--         <result property="parentId"    column="parent_id"    />  -->
+        <result property="supplierName"    column="supplier_name"    />
+        <result property="legalName"    column="legal_name"    />
+        <result property="address"    column="address"    />
+        <result property="linkPhone"    column="link_phone"    />
+        <result property="product"    column="product"    />
+        <result property="cooperateTime"    column="cooperate_time"    />
+        <result property="employeesNum"    column="employees_num"    />
+        <result property="linkPerson"    column="link_person"    />
+        <result property="device"    column="device"    />
+        <result property="post"    column="post"    />
+        <result property="lineNum"    column="line_num"    />
+        <result property="contactType"    column="contact_type"    />
+        <result property="capacity"    column="capacity"    />
+        <result property="artisanNum"    column="artisan_num"    />
+        <result property="qualityNum"    column="quality_num"    />
+        <result property="deptId"    column="dept_id"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="supplierType"    column="supplier_type"    />
+        <result property="deptName"    column="dept_name"    />
+        <result property="status"    column="status"    />
+    </resultMap>
+
+    <sql id="selectSSupplierVo">
+        select t.id, t.supplier_name, t.legal_name, t.address, t.link_phone, t.product, 
+        	t.cooperate_time, t.employees_num, t.link_person, t.device, t.post, t.line_num, 
+        	t.contact_type, t.capacity, t.artisan_num, t.quality_num, t.dept_id, t.del_flag, 
+        	t.create_by, t.create_time, t.update_by, t.update_time, t.supplier_type,t.status,
+        	d.dept_name
+        from s_supplier t left join sys_dept d on t.dept_id = d.dept_id
+    </sql>
+
+    <select id="selectSSupplierList" parameterType="SSupplier" resultMap="SSupplierResult">
+        <include refid="selectSSupplierVo"/>
+        where t.del_flag = '0'
+	      <if test="supplierName != null  and supplierName != ''"> and t.supplier_name like concat(concat('%', #{supplierName}), '%')</if>
+	      <if test="deptId != null and deptId != ''"> and t.dept_id = #{deptId}</if>
+	      <if test="status != null and status != ''"> and t.status = #{status}</if>
+	      <if test="supplierType != null "> and FIND_IN_SET (#{supplierType},t.supplier_type) <![CDATA[ <> ]]> 0</if>
+      	<!-- 数据范围过滤 -->
+		${params.dataScope}
+		order by t.id desc
+    </select>
+    
+    <select id="selectSSupplierListByType" parameterType="SSupplier" resultMap="SSupplierResult">
+        <include refid="selectSSupplierVo"/>
+        where t.status = '0' and t.del_flag = '0' and FIND_IN_SET (#{supplierType},t.supplier_type) <![CDATA[ <> ]]> 0
+		order by t.id
+    </select>
+    
+    <select id="getSupplierListByKpiId" parameterType="Long" resultMap="SSupplierResult">
+        select b.id,b.supplier_name from s_kpi_result a join s_supplier b on a.supplier_id = b.id
+        where a.del_flag = '0' and a.kpi_id=#{kpiId}
+        group by b.id,b.supplier_name
+		order by b.id
+    </select>
+    
+    <select id="getSupplierListBySKpi" parameterType="VKpiInfo" resultMap="SSupplierResult">
+        select b.id,b.supplier_name 
+        from s_kpi_result a join s_supplier b on a.supplier_id = b.id
+        where a.del_flag = '0' 
+        and a.kpi_id in(select t.id from s_kpi t where t.year = #{year} and t.quarter = #{quarter} and t.kpi_type = #{kpiType} and rownum=1)
+        group by b.id,b.supplier_name
+		order by b.id
+    </select>
+    
+    <select id="selectSSupplierById" parameterType="Long" resultMap="SSupplierResult">
+        <include refid="selectSSupplierVo"/>
+        where t.id = #{id}
+    </select>
+    
+    <select id="checkSupplierExistUse" parameterType="Long" resultType="int">
+        select count(1) from s_kpi_result where supplier_id = #{id} and nvl(del_flag,0)=0
+    </select>
+        
+    <insert id="insertSSupplier" parameterType="SSupplier">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT seq_s_supplier.NEXTVAL as id FROM DUAL
+        </selectKey>
+        insert into s_supplier
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+<!--             <if test="parentId != null">parent_id,</if> -->
+            <if test="supplierName != null">supplier_name,</if>
+            <if test="legalName != null">legal_name,</if>
+            <if test="address != null">address,</if>
+            <if test="linkPhone != null">link_phone,</if>
+            <if test="product != null">product,</if>
+            <if test="cooperateTime != null">cooperate_time,</if>
+            <if test="employeesNum != null">employees_num,</if>
+            <if test="linkPerson != null">link_person,</if>
+            <if test="device != null">device,</if>
+            <if test="post != null">post,</if>
+            <if test="lineNum != null">line_num,</if>
+            <if test="contactType != null">contact_type,</if>
+            <if test="capacity != null">capacity,</if>
+            <if test="artisanNum != null">artisan_num,</if>
+            <if test="qualityNum != null">quality_num,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="supplierType != null">supplier_type,</if>
+            <if test="status != null">status,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+<!--             <if test="parentId != null">#{parentId},</if> -->
+            <if test="supplierName != null">#{supplierName},</if>
+            <if test="legalName != null">#{legalName},</if>
+            <if test="address != null">#{address},</if>
+            <if test="linkPhone != null">#{linkPhone},</if>
+            <if test="product != null">#{product},</if>
+            <if test="cooperateTime != null">#{cooperateTime},</if>
+            <if test="employeesNum != null">#{employeesNum},</if>
+            <if test="linkPerson != null">#{linkPerson},</if>
+            <if test="device != null">#{device},</if>
+            <if test="post != null">#{post},</if>
+            <if test="lineNum != null">#{lineNum},</if>
+            <if test="contactType != null">#{contactType},</if>
+            <if test="capacity != null">#{capacity},</if>
+            <if test="artisanNum != null">#{artisanNum},</if>
+            <if test="qualityNum != null">#{qualityNum},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="supplierType != null">#{supplierType},</if>
+            <if test="status != null">#{status},</if>
+         </trim>
+    </insert>
+    
+    <update id="changeStatus" parameterType="SSupplier">
+        update s_supplier set status = #{status} where id = #{id}
+    </update>
+
+    <delete id="deleteSSupplierById" parameterType="Long">
+        update s_supplier set del_flag = '1' where id = #{id}
+    </delete>
+
+    <update id="updateSSupplier" parameterType="SSupplier">
+        update s_supplier
+        <trim prefix="SET" suffixOverrides=",">
+<!--             <if test="parentId != null">parent_id = #{parentId},</if> -->
+            <if test="supplierName != null">supplier_name = #{supplierName},</if>
+            <if test="legalName != null">legal_name = #{legalName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="linkPhone != null">link_phone = #{linkPhone},</if>
+            <if test="product != null">product = #{product},</if>
+            <if test="cooperateTime != null">cooperate_time = #{cooperateTime},</if>
+            <if test="employeesNum != null">employees_num = #{employeesNum},</if>
+            <if test="linkPerson != null">link_person = #{linkPerson},</if>
+            <if test="device != null">device = #{device},</if>
+            <if test="post != null">post = #{post},</if>
+            <if test="lineNum != null">line_num = #{lineNum},</if>
+            <if test="contactType != null">contact_type = #{contactType},</if>
+            <if test="capacity != null">capacity = #{capacity},</if>
+            <if test="artisanNum != null">artisan_num = #{artisanNum},</if>
+            <if test="qualityNum != null">quality_num = #{qualityNum},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="supplierType != null">supplier_type = #{supplierType},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSSupplierByIds" parameterType="String">
+        delete from s_supplier where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

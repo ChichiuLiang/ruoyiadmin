@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<th:block th:include="include :: header('文件上传')" />
+<th:block th:include="include :: bootstrap-fileinput-css" />
+</head>
+<body class="gray-bg">
+	<div class="wrapper wrapper-content animated fadeInRight">
+		<form id="form" action="" method="post" enctype="multipart/form-data">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="ibox float-e-margins">
+						<div class="ibox-content">
+							<div class="form-group">
+								<label class="font-noraml">
+									<!-- <a class="btn btn-success" onclick="downloadFiles()">
+                    					<i class="fa fa-download"></i> 批量下載
+                					</a> -->	
+								</label>
+								<div class="file-loading">
+									<input id="input_id" type="file">
+								</div>
+							</div>
+							<hr>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: bootstrap-fileinput-js" />
+	<script th:inline="javascript">
+    	var prefix = ctx + "supplier/kpi";
+    	var sKpiFileList = [[${sKpiFileList}]]; 		// 初始化已经上传的图片
+    	//console.log(sKpiFileList.length);
+    	var preList = new Array();  					// 预览图片json数据组
+    	var preConfigList = new Array(); 				// 与预览图片json数据组 对应的config数组
+    	for(var i=0;i<sKpiFileList.length;i++){
+    		var sKpiFile = sKpiFileList[i];
+    		var tjson = {
+       			caption: sKpiFile.fileName, 		// 展示的文件名 
+       			size: sKpiFile.fileSize,			// 文件大小
+       			width: '120px'
+        	}; 
+        	preConfigList[i] = tjson;
+        	
+        	if(sKpiFile.fileName.indexOf("xls") > 0){ 	//excel
+        		preList[i]= "<a title='点击下载' href='javascript:downloadFile("+ sKpiFile.id  +")'><div class='kv-preview-data file-preview-other-frame' style='width:213px;height:160px;'><div class='file-preview-other'><span class='file-other-icon'><i class='fa fa-file-excel-o text-success'></i></span></div></div></a>";
+        	}else{ 	//图片
+        		preList[i]= "<a title='点击下载' href='javascript:downloadFile("+ sKpiFile.id  +")'><img src='" + ctx + sKpiFile.filePath.substr(1) + "'  class='file-preview-image kv-preview-data'></a>";
+        	}
+    	}
+    	
+    	$(function () {
+	        $("#input_id").fileinput({
+	        	language : 'zh', //设置语言
+	            showClose:false,
+                dropZoneEnabled: false,
+                showRemove:false,
+                showUpload:false,
+                showBrowse:false,
+	            fileActionSettings: {
+	                 showRemove: false,
+	                 showUpload: false
+	            },
+	            initialPreview : preList,
+	            initialPreviewConfig : preConfigList
+	        })
+    	});
+    	
+    	function downloadFile(value){
+    		window.location.href = prefix + "/downloadSKpiFile/" + value;
+    	}
+    	
+    	function downloadFiles(){
+    		//window.location.href = prefix + "/downloadSKpiFile;
+    	}
+    </script>
+</body>
+</html>

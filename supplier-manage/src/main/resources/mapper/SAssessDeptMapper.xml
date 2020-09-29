@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.supplier.mapper.SAssessDeptMapper">
+    
+    <resultMap type="SAssessDept" id="SAssessDeptResult">
+        <result property="assessId"    column="assess_id"    />
+        <result property="deptId"    column="dept_id"    />
+    </resultMap>
+
+    <sql id="selectSAssessDeptVo">
+        select assess_id, dept_id from s_assess_dept
+    </sql>
+
+    <select id="selectSAssessDeptList" parameterType="SAssessDept" resultMap="SAssessDeptResult">
+        <include refid="selectSAssessDeptVo"/>
+        <where>  
+            <if test="assessId != null "> and assess_id = #{assessId}</if>
+            <if test="deptId != null "> and dept_id = #{deptId}</if>
+        </where>
+    </select>
+    
+    <select id="selectSAssessDeptById" parameterType="Long" resultMap="SAssessDeptResult">
+        <include refid="selectSAssessDeptVo"/>
+        where assess_id = #{assessId}
+    </select>
+        
+    <insert id="insertSAssessDept" parameterType="SAssessDept">
+        insert into s_assess_dept
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="assessId != null">assess_id,</if>
+            <if test="deptId != null">dept_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="assessId != null">#{assessId},</if>
+            <if test="deptId != null">#{deptId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSAssessDept" parameterType="SAssessDept">
+        update s_assess_dept
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
+        </trim>
+        where assess_id = #{assessId}
+    </update>
+
+    <delete id="deleteSAssessDeptById" parameterType="Long">
+        delete from s_assess_dept where assess_id = #{assessId}
+    </delete>
+
+    <delete id="deleteSAssessDeptByIds" parameterType="String">
+        delete from s_assess_dept where assess_id in 
+        <foreach item="assessId" collection="array" open="(" separator="," close=")">
+            #{assessId}
+        </foreach>
+    </delete>
+</mapper>

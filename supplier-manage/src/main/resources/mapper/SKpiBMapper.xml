@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.supplier.mapper.SKpiBMapper">
+    
+    <resultMap type="SKpiB" id="SKpiBResult">
+        <result property="id"    column="id"    />
+        <result property="kpiId"    column="kpi_id"    />
+        <result property="assessId"    column="assess_id"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="twoSortName" column="two_sort_name"/>
+        <result property="threeSortName" column="three_sort_name"/>
+        <result property="assessName" column="assess_name"/>
+        <result property="score" column="score"/>
+        <result property="criteriaName" column="criteria_name"/>
+        <result property="supplierDept" column="supplier_dept"/>
+        <result property="scoreValue" column="score_value"/>
+    </resultMap>
+
+    <sql id="selectSKpiBVo">
+        select id, kpi_id, assess_id, remark, del_flag from s_kpi_b
+    </sql>
+
+    <select id="selectSKpiBList" parameterType="SKpiB" resultMap="SKpiBResult">
+        <include refid="selectSKpiBVo"/>
+        <where>  
+            <if test="kpiId != null "> and kpi_id = #{kpiId}</if>
+            <if test="assessId != null "> and assess_id = #{assessId}</if>
+        </where>
+    </select>
+    
+    <select id="selectSKpiBById" parameterType="Long" resultMap="SKpiBResult">
+        <include refid="selectSKpiBVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectSKpiBByKpiId" parameterType="Long" resultMap="SKpiBResult">
+        select distinct a.id,b.two_sort_name,b.three_sort_name,b.assess_name,
+        	b.score,b.criteria_name,a.remark,b.numtwo,b.numthree,a.assess_id,
+        	b.supplier_dept,a.score score_value
+        from s_kpi_b a left join v_assessinfo b on a.assess_id = b.assess_id 
+        where a.del_flag = '0' and a.kpi_id = #{kpiId}
+        order by b.numtwo,b.numthree,a.assess_id
+    </select>
+        
+    <insert id="insertSKpiB" parameterType="SKpiB">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT seq_s_kpi_b.NEXTVAL as id FROM DUAL
+        </selectKey>
+        insert into s_kpi_b
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="kpiId != null">kpi_id,</if>
+            <if test="assessId != null">assess_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="kpiId != null">#{kpiId},</if>
+            <if test="assessId != null">#{assessId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+    
+    <select id="selectSKpiBId" resultType="long" useCache="false" flushCache="true">
+            SELECT seq_s_kpi_b.NEXTVAL FROM DUAL
+    </select>
+    
+    <insert id="batchSKpiB" useGeneratedKeys="false" >
+	    insert into s_kpi_b(id,kpi_id,assess_id,remark,score)
+		<foreach item="item" collection="list" separator="union all">
+			select #{item.id},#{item.kpiId},#{item.assessId},#{item.remark},#{item.scoreValue,jdbcType=DOUBLE} from dual
+		</foreach>
+	</insert>
+
+    <update id="updateSKpiB" parameterType="SKpiB">
+        update s_kpi_b
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="kpiId != null">kpi_id = #{kpiId},</if>
+            <if test="assessId != null">assess_id = #{assessId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSKpiBByKpiId" parameterType="Long">
+        delete from s_kpi_b where kpi_id = #{kpiId}
+    </delete>
+    
+    <update id="updateSKpiBByKpiId" parameterType="Long">
+        update s_kpi_b set del_flag = '1' where kpi_id = #{kpiId}
+    </update>
+
+    <delete id="deleteSKpiBByIds" parameterType="String">
+        delete from s_kpi_b where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

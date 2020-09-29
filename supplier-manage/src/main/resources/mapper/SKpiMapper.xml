@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.supplier.mapper.SKpiMapper">
+
+	<resultMap type="SKpi" id="SKpiResult">
+		<result property="id" column="id" />
+		<result property="kpiType" column="kpi_type" />
+		<result property="year" column="year" />
+		<result property="month" column="month" />
+		<result property="quarter" column="quarter" />
+		<result property="deptId" column="dept_id" />
+		<result property="createBy" column="create_by" />
+		<result property="createTime" column="create_time" />
+		<result property="updateBy" column="update_by" />
+		<result property="updateTime" column="update_time" />
+		<result property="delFlag" column="del_flag" />
+		<result property="remark" column="remark" />
+		<result property="status" column="status" />
+		<result property="supplierId" column="supplier_id" />
+		<result property="linkName" column="link_name" />
+	</resultMap>
+	
+	<resultMap type="VKpiInfo" id="VKpiInfoResult">
+        <result property="oneSortId" column="one_sort_id"/>
+        <result property="oneSortName" column="one_sort_name"/>
+        <result property="twoSortId" column="two_sort_id"/>
+        <result property="twoSortName" column="two_sort_name"/>
+        <result property="threeSortId" column="three_sort_id"/>
+        <result property="threeSortName" column="three_sort_name"/>
+        <result property="assessName" column="assess_name"/>
+        <result property="assessScore" column="assess_score"/>
+        <result property="criteriaName" column="criteria_name"/>
+        <result property="assessId" column="assess_id"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="kpiId" column="kpi_id"/>
+        <result property="kpiBId" column="kpi_b_id"/>
+        <result property="kpiResultId" column="kpi_result_id"/>
+        <result property="status" column="status"/>
+        <result property="kpiType" column="kpi_type" />
+        <result property="typeName" column="type_name"/>
+		<result property="year" column="year" />
+		<result property="month" column="month" />
+		<result property="quarter" column="quarter" />
+		<result property="kpiRemark" column="kpi_remark" />
+        <result property="score"    column="score"    />
+        <result property="basis"    column="basis"    />
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="kpiSupplierId"    column="kpi_supplier_id" />
+        <result property="supplierName" column="supplier_name"/>
+        <result property="kpiSupplierName" column="kpi_supplier_name" />
+        <result property="supplierDept" column="supplier_dept" />
+        <result property="linkName" column="link_name" />
+    </resultMap>
+    
+	<sql id="selectSKpiVo">
+		select t.id, t.kpi_type, t.year, t.month, t.quarter, t.dept_id,t.supplier_id,t.link_name,
+		t.create_by, t.create_time,t.update_by, t.update_time, t.del_flag,t.remark,t.status
+		from s_kpi t
+	</sql>
+	
+	<select id="selectKpiType" parameterType="SKpi" resultMap="VKpiInfoResult">
+		select t.kpi_type, t.type_name
+  		from V_KPI_INFO t
+  		<!-- 数据范围过滤 -->
+  		where 1=1
+		${params.dataScope}
+ 		group by t.kpi_type, t.type_name
+ 		order by t.kpi_type
+	</select>
+	
+	<select id="selectVKpiList" parameterType="SKpi" resultMap="VKpiInfoResult">
+		select t.kpi_type, t.type_name, t.year, t.quarter,t.kpi_supplier_id,t.kpi_supplier_name
+  		from V_KPI_INFO t
+  		where 1=1
+  		<if test="status != null "> and t.status = #{status}</if>
+ 		<if test="kpiType != null "> and t.kpi_type = #{kpiType}</if>
+		<if test="year != null  and year != ''"> and t.year = #{year}</if>
+		<if test="quarter != null  and quarter != ''"> and t.quarter = #{quarter}</if>
+  		<!-- 数据范围过滤 -->
+		${params.dataScope}
+ 		group by t.kpi_type, t.type_name, t.year, t.quarter,t.kpi_supplier_id,t.kpi_supplier_name
+ 		order by t.kpi_type, t.year, t.quarter,t.kpi_supplier_id
+	</select>
+	
+	<select id="selectVKpiInfoList" parameterType="VKpiInfo" resultMap="VKpiInfoResult">
+		select t.dept_id,
+		       t.assess_id,
+		       t.supplier_id,
+		       t.supplier_name,
+		       t.dept_name,
+		       t.two_sort_name,
+		       t.three_sort_name,
+		       t.assess_name,
+		       t.assess_score,
+		       t.criteria_name,
+		       t.supplier_dept,
+		       t.score,
+		       t.basis
+  		from V_KPI_INFO t
+  		where 1=1
+  		<if test="status != null "> and t.status = #{status}</if>
+  		<if test="kpiSupplierId != null "> and t.kpi_supplier_id = #{kpiSupplierId}</if>
+ 		<if test="kpiType != null "> and t.kpi_type = #{kpiType}</if>
+		<if test="year != null  and year != ''"> and t.year = #{year}</if>
+		<if test="quarter != null  and quarter != ''"> and t.quarter = #{quarter}</if>
+  		<!-- 数据范围过滤 -->
+		${params.dataScope}
+ 		order by t.numtwo, t.numthree, t.assess_id,t.dept_id, t.supplier_id
+	</select>
+
+	<select id="selectSKpiList" parameterType="SKpi" resultMap="SKpiResult">
+		<include refid="selectSKpiVo" />
+		where t.del_flag = '0'
+			<if test="kpiType != null "> and t.kpi_type = #{kpiType}</if>
+			<if test="year != null  and year != ''"> and t.year = #{year}</if>
+			<if test="month != null  and month != ''"> and t.month = #{month}</if>
+			<if test="quarter != null  and quarter != ''"> and t.quarter = #{quarter}</if>
+			<if test="status != null "> and t.status = #{status}</if>
+			<if test="supplierId != null "> and t.supplier_id = #{supplierId}</if>
+		<!-- 数据范围过滤 -->
+		${params.dataScope}
+		order by t.create_time desc
+	</select>
+	
+	<select id="selectChildList" parameterType="map" resultMap="SKpiResult">
+		select one_sort_name,two_sort_name,three_sort_name,assess_name,assess_score,criteria_name,
+		<foreach collection="list" item="item" separator=",">
+            decode(supplier_id,#{item.supplier_id},score,0) as #{item.supplier_id}
+        </foreach>
+		from v_kpi_info
+		where dept_id = #{deptId} and kpi_id = #{kpiId}
+		group by one_sort_name,two_sort_name,three_sort_name,assess_name,assess_score,criteria_name
+		order by numtwo,numthree
+	</select>
+
+	<select id="selectSKpiById" parameterType="Long" resultMap="SKpiResult">
+		<include refid="selectSKpiVo" />
+		where t.id = #{id}
+	</select>
+	
+	<select id="checkSKpiExist" parameterType="SKpi" resultType="int">
+        select count(1) from s_kpi 
+        where nvl(del_flag,0)=0 and kpi_type = #{kpiType} 
+        and year=#{year} and quarter = #{quarter}
+        and dept_id=#{deptId}
+        <if test="supplierId != null"> and supplier_id=#{supplierId}</if>
+    </select>
+
+	<insert id="insertSKpi" parameterType="SKpi">
+		<selectKey keyProperty="id" resultType="long" order="BEFORE">
+			SELECT
+			seq_s_kpi.NEXTVAL as id FROM DUAL
+		</selectKey>
+		insert into s_kpi
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="kpiType != null">kpi_type,</if>
+			<if test="year != null">year,</if>
+			<if test="month != null">month,</if>
+			<if test="quarter != null">quarter,</if>
+			<if test="deptId != null">dept_id,</if>
+			<if test="createBy != null">create_by,</if>
+			<if test="createTime != null">create_time,</if>
+			<if test="updateBy != null">update_by,</if>
+			<if test="updateTime != null">update_time,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="remark != null">remark,</if>
+			<if test="status != null">status,</if>
+			<if test="supplierId != null">supplier_id,</if>
+			<if test="linkName != null">link_name,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="kpiType != null">#{kpiType},</if>
+			<if test="year != null">#{year},</if>
+			<if test="month != null">#{month},</if>
+			<if test="quarter != null">#{quarter},</if>
+			<if test="deptId != null">#{deptId},</if>
+			<if test="createBy != null">#{createBy},</if>
+			<if test="createTime != null">#{createTime},</if>
+			<if test="updateBy != null">#{updateBy},</if>
+			<if test="updateTime != null">#{updateTime},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="status != null">#{status},</if>
+			<if test="supplierId != null">#{supplierId},</if>
+			<if test="linkName != null">#{linkName},</if>
+		</trim>
+	</insert>
+
+	<update id="updateSKpi" parameterType="SKpi">
+		update s_kpi
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="kpiType != null">kpi_type = #{kpiType},</if>
+			<if test="year != null">year = #{year},</if>
+			<if test="month != null">month = #{month},</if>
+			<if test="quarter != null">quarter = #{quarter},</if>
+			<if test="deptId != null">dept_id = #{deptId},</if>
+			<if test="createBy != null">create_by = #{createBy},</if>
+			<if test="createTime != null">create_time = #{createTime},</if>
+			<if test="updateBy != null">update_by = #{updateBy},</if>
+			<if test="updateTime != null">update_time = #{updateTime},</if>
+			<if test="delFlag != null">del_flag = #{delFlag},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="supplierId != null">supplier_id = #{supplierId},</if>
+			<if test="linkName != null">link_name = #{linkName},</if>
+		</trim>
+		where id = #{id}
+	</update>
+	
+	<update id="updateStatus" parameterType="SKpi">
+		update s_kpi set status = #{status} where id = #{id}
+	</update>
+
+	<delete id="deleteSKpiById" parameterType="Long">
+		delete from s_kpi
+		where id = #{id}
+	</delete>
+	
+	<update id="updateSKpiById" parameterType="Long">
+		update s_kpi set del_flag = '1' where id = #{id}
+	</update>
+
+	<delete id="deleteSKpiByIds" parameterType="String">
+		delete from s_kpi where id in
+		<foreach item="id" collection="array" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach>
+	</delete>
+</mapper>

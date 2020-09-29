@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改美体内衣包装袋供应商绩效考评')" />
+</head>
+<body class="gray-bg">
+	<div class="main-content">
+        <form class="form-horizontal m" id="form-kpi-edit" th:object="${sKpi}">
+            <input name="id" id="id" th:field="*{id}" type="hidden">
+            <input name="kpiType" th:field="*{kpiType}" type="hidden">
+        	<input name="deptId" th:field="*{deptId}" type="hidden" >
+        	<h4 class="form-header h4">包装物料供应商绩效考核评分表</h4>
+            <div class="row">
+            	<div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">状态：</label>
+                        <div class="col-sm-8">
+                            <select name="status" class="form-control" th:with="type=${@dict.getType('bill_status')}" disabled>
+				                <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{status}" ></option>
+				            </select>
+                        </div>
+                    </div>
+                </div>
+            	<div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">年份：</label>
+                        <div class="col-sm-8">
+                            <input name="year" th:field="*{year}" class="form-control" type='number' oninput='if(value.length>4)value=value.slice(0,4)' required disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+            	<div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">月份：</label>
+                        <div class="col-sm-8">
+                            <input name="month" th:field="*{month}" class="form-control" type='number' oninput='if(value>12)value=12;if(value<1)value=1' required disabled>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">季度：</label>
+                        <div class="col-sm-8">
+                            <input name="quarter" th:field="*{quarter}" class="form-control" type='number' oninput='if(value>4)value=4;if(value<1)value=1' required disabled>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">备注：</label>
+                        <div class="col-xs-10">
+                            <textarea name="remark" th:field="*{remark}" maxlength="500" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h4 class="form-header h4">评估项目</h4>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="col-sm-12 select-table table-bordered">
+					    <table id="bootstrap-table"></table>
+					</div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="row">
+        <div class="col-sm-offset-5 col-sm-10">
+            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/kpi";
+        //动态存储评估对象信息，
+        var map = null;
+        
+        function getColumns(){
+        	var columnsArray = [
+		        {
+		            field: 'twoSortName',
+		            title: 'KPI指标',
+		            align: 'center'
+		        },
+		        {
+		            field: 'threeSortName',
+		            title: 'KPI指标',
+		            align: 'center'
+		        },
+		        {
+		            field: 'assessName',
+		            title: '评估项目',
+		            width: '200px'
+		        },
+		        {
+		            field: 'score',
+		            title: '分值',
+		            align: 'center'
+		        },
+		        {
+		            field: 'criteriaName',
+		            title: '衡量标准',
+		            width: '200px'
+		        }];
+        	
+	        $.ajax({
+	           async: false,
+	           type: "GET",
+	           url: prefix + "/getSupplierByKpiId/"+[[${sKpi.id}]],
+	           contentType: "application/json;charset=utf-8",
+	           dataType: "json",
+	           json: 'callback',
+	           success: function (json) {
+	        	   //console.log(json);
+	        	   map = $.common.objToStrMap(json);
+	        	   map.forEach(function(value,key){
+	        		   var str = key.split(",");
+	        		   columnsArray.push({
+	                       title: value,
+	                       field: 'score' + str[1],
+	                       align: 'center',
+		       	           formatter: function(value1, row, index) {
+		    	            	var html = $.common.sprintf("<input class='form-control' type='number' oninput='if(value>" + row.score + ")value="+ row.score + ";if(value<0)value=0' name='kpibs[%s].KpiResults[%s].score' value='%s'>", index,str[1],value1==null?'':value1);
+		    	            	return html;
+		                    }
+	                   });
+	        		   columnsArray.push({
+	                       title: '得分依据',
+	                       field: 'basis' + str[1],
+	                       align: 'center',
+	                       width: '150px',
+		       	           formatter: function(value1, row, index) {
+		    	            	var html = $.common.sprintf("<textarea maxlength='2000' class='form-control' type='text' name='kpibs[%s].KpiResults[%s].basis' rows='4'>%s</textarea>", index,str[1],value1==null?'':value1);
+		    	            	return html;
+		                    }
+	                   });
+	        	   });
+	           }
+	       	}); 
+	        
+	        return columnsArray;
+    	}
+        
+        $(function() {
+		    var options = {
+                pagination: false,
+		        showSearch: false,
+                showRefresh: false,
+                showToggle: false,
+                showColumns: false,
+                url: prefix + "/childlist",
+                queryParams : {
+                    kpiId: $('#id').val()
+				},
+                onLoadSuccess: function (data) {
+                	$.table.mergeCells(data.rows, "threeSortName",null, $('#bootstrap-table'));
+                	$.table.mergeCells(data.rows, "twoSortName","threeSortName", $('#bootstrap-table'));
+	            },
+		        columns : getColumns()
+		    };
+		    $.table.init(options);
+		});
+        
+        $("#form-kpi-edit").validate({
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+            	var data = $("#form-kpi-edit").serializeArray();
+            	var dataAll = $("#" + table.options.id).bootstrapTable('getData');
+            	//console.log(data);
+            	for(var i in dataAll){
+            		var obj = dataAll[i];
+            		data.push({"name":"kpibs[" + i + "].assessId","value":obj.assessId});
+            		map.forEach(function(value,key){
+                		var str = key.split(",");
+                		data.push({"name":"kpibs["+ i +"].KpiResults["+ str[1] +"].supplierId","value":str[0]});
+                	});
+            	}
+            	
+                $.operate.save(prefix + "/edit", data);
+            }
+        }
+    </script>
+</body>
+</html>

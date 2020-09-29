@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.supplier.mapper.SKpiResultMapper">
+    
+    <resultMap type="SKpiResult" id="SKpiResultResult">
+        <result property="id"    column="id"    />
+        <result property="kpiId"    column="kpi_id"    />
+        <result property="kpiBId"    column="kpi_b_id"    />
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="score"    column="score"    />
+        <result property="basis"    column="basis"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectSKpiResultVo">
+        select id,kpi_id, kpi_b_id, supplier_id, score, basis, del_flag from s_kpi_result
+    </sql>
+
+    <select id="selectSKpiResultList" parameterType="SKpiResult" resultMap="SKpiResultResult">
+        <include refid="selectSKpiResultVo"/>
+        <where>  
+            <if test="kpiBId != null "> and kpi_b_id = #{kpiBId}</if>
+            <if test="supplierId != null "> and supplier_id = #{supplierId}</if>
+            <if test="score != null "> and score = #{score}</if>
+            <if test="basis != null  and basis != ''"> and basis = #{basis}</if>
+        </where>
+    </select>
+    
+    <select id="selectSKpiResultById" parameterType="Long" resultMap="SKpiResultResult">
+        <include refid="selectSKpiResultVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectSKpiResultByKpiId" parameterType="Long" resultMap="SKpiResultResult">
+        <include refid="selectSKpiResultVo"/>
+        where del_flag = '0' and kpi_id = #{kpiId}
+        order by supplier_id
+    </select>
+        
+    <insert id="insertSKpiResult" parameterType="SKpiResult">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT seq_s_kpi_result.NEXTVAL as id FROM DUAL
+        </selectKey>
+        insert into s_kpi_result
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="kpiBId != null">kpi_b_id,</if>
+            <if test="supplierId != null">supplier_id,</if>
+            <if test="score != null">score,</if>
+            <if test="basis != null">basis,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="kpiBId != null">#{kpiBId},</if>
+            <if test="supplierId != null">#{supplierId},</if>
+            <if test="score != null">#{score},</if>
+            <if test="basis != null">#{basis},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+    
+    <select id="selectSKpiResultId" resultType="long" useCache="false" flushCache="true">
+            SELECT seq_s_kpi_result.NEXTVAL FROM DUAL
+    </select>
+    
+    <insert id="batchSKpiResult" useGeneratedKeys="false">
+	    insert into s_kpi_result(id,kpi_id,kpi_b_id,supplier_id,score,basis)
+		<foreach item="item" collection="list" separator="union all">
+			select
+				#{item.id},#{item.kpiId},#{item.kpiBId},#{item.supplierId},#{item.score,jdbcType=DOUBLE},#{item.basis}
+			from dual
+		</foreach>
+	</insert>
+
+    <update id="updateSKpiResult" parameterType="SKpiResult">
+        update s_kpi_result
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="kpiBId != null">kpi_b_id = #{kpiBId},</if>
+            <if test="supplierId != null">supplier_id = #{supplierId},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="basis != null">basis = #{basis},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSKpiResultByKpiId" parameterType="Long">
+        delete from s_kpi_result where kpi_id = #{kpiId}
+    </delete>
+    
+    <update id="updateSKpiResultByKpiId" parameterType="Long">
+        update s_kpi_result set del_flag = '1' where kpi_id = #{kpiId}
+    </update>
+
+    <delete id="deleteSKpiResultByIds" parameterType="String">
+        delete from s_kpi_result where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

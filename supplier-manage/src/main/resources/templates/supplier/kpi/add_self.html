@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('新增供应商绩效自评')" />
+    <th:block th:include="include :: select2-css" />
+ 	
+</head>
+<body>
+	<div class="main-content">
+        <form class="form-horizontal" id="form-kpi-add">
+        	<input name="kpiType" value="5" type="hidden">
+        	<input name="deptId" type="hidden" th:value="${@permission.getPrincipalProperty('dept')['deptId']}" />
+        	<input name="status" value="1" type="hidden">
+            <h4 class="form-header h4">供应商绩效考核评分表</h4>
+            <div class="row">
+            	<div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">状态：</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" th:with="type=${@dict.getType('bill_status')}" disabled>
+				                <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" ></option>
+				            </select>
+                        </div>
+                    </div>
+                </div>
+            	<div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">年份：</label>
+                        <div class="col-sm-8">
+                            <input name="year" class="form-control" type='number' oninput='if(value.length>4)value=value.slice(0,4)' th:value="${#dates.year(new java.util.Date().getTime())}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">月份：</label>
+                        <div class="col-sm-8">
+                            <input name="month" class="form-control" type='number' oninput='if(value>12)value=12;if(value<1)value=1' th:value="${#dates.month(new java.util.Date().getTime())}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">季度：</label>
+                        <div class="col-sm-8">
+                            <input name="quarter" placeholder="请输入季度" class="form-control" type='number' oninput='if(value>4)value=4;if(value<1)value=1' required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">考评对象：</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" name="supplierId" required>
+								<option th:each="supplier : ${supplierList}" th:text="${supplier.supplierName}" th:value="${supplier.id}"></option>
+							</select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">联系人：</label>
+                        <div class="col-sm-8">
+                            <input name="linkName" class="form-control" type='text' required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">备注：</label>
+                        <div class="col-xs-10">
+                            <textarea name="remark" maxlength="500" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h4 class="form-header h4">评估项目</h4>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="col-sm-12 select-table table-bordered">
+					    <table id="bootstrap-table"></table>
+					</div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="row">
+        <div class="col-sm-offset-5 col-sm-10">
+            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+        </div>
+    </div>
+    
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: select2-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/kpi";
+        
+        $(function() {
+		    var options = {
+                pagination: false,
+		        showSearch: false,
+                showRefresh: false,
+                showToggle: false,
+                showColumns: false,
+                url: prefix + "/getAssessListByDeptId/5",
+                method : 'get',
+                onLoadSuccess: function (data) {
+                	$.table.mergeCells(data.rows, "threeSortName",null, $('#bootstrap-table'));
+                	$.table.mergeCells(data.rows, "twoSortName","threeSortName", $('#bootstrap-table'));
+	            },
+		        columns : [
+			        {
+			            field: 'twoSortName',
+			            title: 'KPI指标',
+			            align: 'center'
+			        },
+			        {
+			            field: 'threeSortName',
+			            title: 'KPI指标',
+			            align: 'center'
+			        },
+			        {
+			            field: 'assessName',
+			            title: '评估项目',
+			            width: '300px'
+			        },
+			        {
+			            field: 'score',
+			            title: '分值',
+			            align: 'center'
+			        },
+			        {
+			            field: 'criteriaName',
+			            title: '衡量标准',
+			            width: '300px'
+			        },
+			        {
+			        	title: '评分',
+	                    align: 'center',
+			            width: 80,
+	       	           	formatter: function(value, row, index) {
+	    	            	var html = $.common.sprintf("<input class='form-control' type='number' oninput='if(value>" + row.score + ")value="+ row.score + ";if(value<0)value=0' name='kpibs[%s].scoreValue' >", index);
+	    	            	return html;
+	                    }
+			        },
+			        {
+			        	title: '备注',
+			            align: 'center',
+			            width: '200px',
+			            formatter: function(value, row, index) {
+			            	var html = $.common.sprintf("<textarea maxlength='500' class='form-control' type='text' name='kpibs[%s].remark' rows='2'></textarea>", index);
+			            	return html;
+		                }
+			        }]
+		    };
+		    $.table.init(options);
+		});
+        
+        $("#form-kpi-add").validate({
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+            	var data = $("#form-kpi-add").serializeArray();
+            	var dataAll = $("#" + table.options.id).bootstrapTable('getData');
+            	//console.log(data);
+            	for(var i in dataAll){
+            		var obj = dataAll[i];
+            		data.push({"name":"kpibs[" + i + "].assessId","value":obj.assessId});
+            	}
+            	
+                $.operate.save(prefix + "/add", data);
+            }
+        }
+    </script>
+</body>
+</html>

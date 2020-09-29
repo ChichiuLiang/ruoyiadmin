@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('新增KPI指标分类')" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-sort-add">
+            <input id="treeId" name="parentId" type="hidden" th:value="${sort?.id}" />
+            <div class="form-group">
+                <label class="col-sm-3 control-label">上级类目：</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <input class="form-control" type="text" onclick="selectSortTree()" id="treeName" readonly="true" th:value="${sort?.sortName}">
+                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">分类名称：</label>
+                <div class="col-sm-8">
+                    <input name="sortName" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">权重：</label>
+                <div class="col-sm-8">
+                    <input name="weight" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">显示顺序：</label>
+                <div class="col-sm-8">
+                    <input name="orderNum" class="form-control" type="text">
+                </div>
+            </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/sort"
+        $("#form-sort-add").validate({
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                $.operate.save(prefix + "/add", $('#form-sort-add').serialize());
+            }
+        }
+
+        /*kpi指标分类管理-新增-选择上级类目*/
+        function selectSortTree() {
+            var options = {
+                title: '类目选择',
+                width: "380",
+                url: prefix + "/selectSortTree/" + $("#treeId").val(),
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero){
+            var body = layer.getChildFrame('body', index);
+            $("#treeId").val(body.find('#treeId').val());
+            $("#treeName").val(body.find('#treeName').val());
+            layer.close(index);
+        }
+    </script>
+</body>
+</html>

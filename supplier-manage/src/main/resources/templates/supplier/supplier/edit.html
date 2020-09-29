@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改供应商档案')" />
+    <th:block th:include="include :: select2-css" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-supplier-edit" th:object="${sSupplier}">
+            <input name="id" th:field="*{id}" type="hidden">
+            <input name="deptId" type="hidden" id="treeId" th:value="*{deptId}" />
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">状态：</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <label class="toggle-switch switch-solid">
+                        <input type="checkbox" id="status" th:checked="*{status == '0' ? true : false}">
+                        <span></span>
+                    </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">归属部门：</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <input class="form-control" type="text" name="deptName" onclick="selectDeptTree()" id="treeName" th:field="*{deptName}" required>
+                    	<span class="input-group-addon"><i class="fa fa-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">供应商类型：</label>
+                <div class="col-sm-8">
+                	<select id=supplierType class="form-control select2-multiple" multiple required>
+						<option th:each="dict : ${dicts}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:selected="${dict.flag}"></option>
+					</select>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">供应商名称：</label>
+                <div class="col-sm-8">
+                    <input name="supplierName" th:field="*{supplierName}" class="form-control" type="text" required>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">法定代表人：</label>
+                <div class="col-sm-8">
+                    <input name="legalName" th:field="*{legalName}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">联系地址：</label>
+                <div class="col-sm-8">
+                    <input name="address" th:field="*{address}" class="form-control" type="text" required>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">联系电话：</label>
+                <div class="col-sm-8">
+                    <input name="linkPhone" th:field="*{linkPhone}" class="form-control" type="text" required>
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">供货产品：</label>
+                <div class="col-sm-8">
+                    <input name="product" th:field="*{product}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">合作时间：</label>
+                <div class="col-sm-8">
+                    <input name="cooperateTime" th:field="*{cooperateTime}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">员工人数：</label>
+                <div class="col-sm-8">
+                    <input name="employeesNum" th:field="*{employeesNum}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">主要联系人：</label>
+                <div class="col-sm-8">
+                    <input name="linkPerson" th:field="*{linkPerson}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">机器设备：</label>
+                <div class="col-sm-8">
+                    <input name="device" th:field="*{device}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">联系人职务：</label>
+                <div class="col-sm-8">
+                    <input name="post" th:field="*{post}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">生产线数量：</label>
+                <div class="col-sm-8">
+                    <input name="lineNum" th:field="*{lineNum}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">联系方式：</label>
+                <div class="col-sm-8">
+                    <input name="contactType" th:field="*{contactType}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">月产能：</label>
+                <div class="col-sm-8">
+                    <input name="capacity" th:field="*{capacity}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">技术人员数量：</label>
+                <div class="col-sm-8">
+                    <input name="artisanNum" th:field="*{artisanNum}" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="form-group">    
+                <label class="col-sm-3 control-label">质检人数：</label>
+                <div class="col-sm-8">
+                    <input name="qualityNum" th:field="*{qualityNum}" class="form-control" type="text">
+                </div>
+            </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: select2-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "supplier/supplier";
+        $("#form-supplier-edit").validate({
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+            	var data = $('#form-supplier-edit').serializeArray();
+            	var supplierType = $.form.selectSelects("supplierType");
+            	var status = $("input[id='status']").is(':checked') == true ? 0 : 1;
+            	data.push({"name": "supplierType", "value": supplierType});
+            	data.push({"name": "status", "value": status});
+                $.operate.save(prefix + "/edit", data);
+            }
+        }
+        
+        function selectDeptTree() {
+        	var deptId = $.common.isEmpty($("#treeId").val()) ? "100" : $("#treeId").val();
+            var url = ctx + "system/dept/selectDeptTree/" + deptId;
+		    var options = {
+				title: '选择部门',
+				width: "380",
+				url: url,
+				callBack: doSubmit
+			};
+			$.modal.openOptions(options);
+		}
+		
+		function doSubmit(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowParents(tree)) {
+    			var body = layer.getChildFrame('body', index);
+    			$("#treeId").val(body.find('#treeId').val());
+    			$("#treeName").val(body.find('#treeName').val());
+    			layer.close(index);
+			}
+		}
+        
+        $(function() {
+            $('#supplierType').select2({
+                placeholder: "请选择供应商类型",
+                allowClear: true
+            });
+        })
+    </script>
+</body>
+</html>

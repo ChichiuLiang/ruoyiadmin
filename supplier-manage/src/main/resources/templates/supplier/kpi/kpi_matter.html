@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('美体内衣包装物料供应商绩效考评列表')" />
+    <th:block th:include="include :: select2-css" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                	<input type="hidden" name="kpiType" value="3"/>
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>年份：</label>
+                                <input type="text" name="year"/>
+                            </li>
+                            <li>
+                                <label>季度：</label>
+                                <input type="text" name="quarter"/>
+                            </li>
+                            <li>
+								<label>状态：</label>
+									<select class="form-control" name="status" th:with="type=${@dict.getType('bill_status')}">
+										<option value="">所有</option>
+										<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+									</select>
+								</li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.addTab(3)" shiro:hasPermission="supplier:kpiMatter:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a id="submit" class="btn btn-warning disabled" onclick="submit()" shiro:hasPermission="supplier:kpiMatter:submit">
+                    <i class="fa fa-check"></i> 提交
+                </a>
+                <a id="approve" class="btn btn-primary disabled" onclick="updateStatus(3)" shiro:hasPermission="supplier:kpiMatter:approve">
+                    <i class="fa fa-check"></i> 审核
+                </a>
+                <a id="unapprove" class="btn btn-danger disabled" onclick="updateStatus(2)" shiro:hasPermission="supplier:kpiMatter:unapprove">
+                    <i class="fa fa-times"></i> 弃审
+                </a>
+                <a class="btn btn-info single disabled" onclick="toUpload()" shiro:hasPermission="supplier:kpiMatter:upload">
+                    <i class="fa fa-upload"></i> 上传/下载
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-bordered">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: select2-js" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('supplier:kpiMatter:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('supplier:kpiMatter:remove')}]];
+        var datas = [[${@dict.getType('bill_status')}]];
+        var prefix = ctx + "supplier/kpi";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add/{id}",
+                updateUrl: prefix + "/edit/3/{id}",
+                removeUrl: prefix + "/remove/{id}",
+                uploadUrl: prefix + "/upload/{id}",
+                updateStatusUrl: prefix + "/updateStatus",
+                showToggle: false,
+		        showColumns: false,
+		        detailView: true,
+		        clickToSelect:true,
+		        modalName: "包装物料供应商绩效考核",
+				onExpandRow : function(index, row, $detail) {
+					initChildTable(index, row, $detail);
+				},
+				onClickRow: function(row,$element){
+					if(row.status == 1){
+						$('a').each(function(){
+							var id = $(this).attr('id');
+							if(id == 'submit')
+								$(this).removeClass("disabled");
+							else if(id == 'approve')
+								$(this).addClass('disabled');
+							else if(id == 'unapprove')
+								$(this).addClass("disabled");
+						})
+					}else if(row.status == 2){
+						$('a').each(function(){
+							var id = $(this).attr('id');
+							if(id == 'submit')
+								$(this).addClass("disabled");
+							else if(id == 'approve')
+								$(this).removeClass("disabled");
+							else if(id == 'unapprove')
+								$(this).addClass("disabled");
+						})
+					}else if(row.status == 3){
+						$('a').each(function(){
+							var id = $(this).attr('id');
+							if(id == 'submit')
+								$(this).addClass("disabled");
+							else if(id == 'approve')
+								$(this).addClass("disabled");
+							else if(id == 'unapprove')
+								$(this).removeClass("disabled");
+						})
+					}
+				},
+                columns: [{
+                    radio: true
+                },
+                {
+                    field: 'id',
+                    title: 'id',
+                    visible: false
+                },
+                {
+                    field: 'status',
+                    title: '状态',
+                    formatter: function(value, row, index) {
+                    	return $.table.selectDictLabel(datas, value);
+                    }
+                },
+                {
+                    field: 'year',
+                    title: '年份'
+                },
+                {
+                    field: 'quarter',
+                    title: '季度'
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间'
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        var flag = "";
+                        if(row.status == 3)
+                        	flag = "disabled";
+                        actions.push('<a class="btn btn-success btn-xs '+ flag + ' ' + + editFlag + '" href="javascript:void(0)" onclick="$.operate.editTab(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + flag + ' ' + removeFlag + '" href="javascript:void(0)" onclick="remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+        
+        initChildTable = function(index, row, $detail) {
+			var childTable = $detail.html('<table style="table-layout:fixed"></table>').find('table');
+    	    $(childTable).bootstrapTable({
+    	        url: prefix + "/childlist",
+    	        method: 'post',
+    	        contentType: "application/x-www-form-urlencoded",
+    	        queryParams : {
+                    kpiId: row.id
+				},
+				onLoadSuccess: function (data) {
+                	$.table.mergeCells(data.rows, "threeSortName",null, childTable);
+                	$.table.mergeCells(data.rows, "twoSortName","threeSortName", childTable);
+	            },
+    	        columns: getColumns(row.id)
+    	    });
+		};
+		
+		function getColumns(kpiId){
+        	var columnsArray = [
+		        {
+		            field: 'twoSortName',
+		            title: 'KPI指标',
+		            width: '80px',
+		            align: 'center'
+		        },
+		        {
+		            field: 'threeSortName',
+		            title: 'KPI指标',
+		            width: '80px',
+		            align: 'center'
+		        },
+		        {
+		            field: 'assessName',
+		            title: '评估项目',
+		            width: '200px',
+		            align: 'center',
+                    formatter: function(value, row, index) {
+                        return $.table.tooltip(value);
+                    }
+		            
+		        },
+		        {
+		            field: 'score',
+		            title: '分值',
+		            width: '50px',
+		            align: 'center'
+		        },
+		        {
+		            field: 'criteriaName',
+		            title: '衡量标准',
+		            width: '200px',
+		            align: 'center',
+                    formatter: function(value, row, index) {
+                    	var str = value.replace(/<p>/g,'');
+                    	str = str.replace(/<\/p>/g,'\n');
+                        return $.table.tooltip(str);
+                    }
+		        }];
+        	
+	        $.ajax({
+	           async: false,
+	           type: "GET",
+	           url: prefix + "/getSupplierByKpiId/"+kpiId,
+	           contentType: "application/json;charset=utf-8",
+	           dataType: "json",
+	           json: 'callback',
+	           success: function (json) {
+	        	   //console.log(json);
+	        	   map = $.common.objToStrMap(json);
+	        	   map.forEach(function(value,key){
+	        		   var str = key.split(",");
+	        		   columnsArray.push({
+	                       title: value,
+	                       field: "score" + str[1],
+	                       align: 'center'
+	                   });
+	        		   columnsArray.push({
+	                       title: '得分依据',
+	                       field: "basis" + str[1],
+	                       align: 'center'
+	                   });
+	        	   });
+	           }
+	       	}); 
+	        
+	        return columnsArray;
+    	}
+		
+		function remove(id){
+        	$.modal.confirm("确定删除该条信息吗？", function() {
+                var url = $.common.isEmpty(id) ? table.options.removeUrl : table.options.removeUrl.replace("{id}", id);
+                $.operate.get(url);
+        	});
+        }
+		
+		function submit(){
+        	$.modal.confirm("确定提交该条信息吗？", function() {
+        		var row = $("#" + table.options.id).bootstrapTable('getSelections')[0];
+                $.operate.post(table.options.updateStatusUrl, { "id": row["id"], "status": 2 });
+        	});
+        }
+		
+		function updateStatus(status){
+			var mess = "";
+			if(status == 3){
+				mess = "确定审核该条信息吗？";
+			}else if (status == 2){
+				mess = "确定弃审该条信息吗？";
+			}
+        	$.modal.confirm(mess, function() {
+        		var row = $("#" + table.options.id).bootstrapTable('getSelections')[0];
+        		 $.operate.post(table.options.updateStatusUrl, { "id": row["id"], "status": status });
+        	});
+        }
+		
+		function toUpload(){
+			table.set();
+			var row = $("#" + table.options.id).bootstrapTable('getSelections')[0];
+			var url = table.options.uploadUrl.replace("{id}",row["id"]);
+        	$.modal.openTab("上传/下载文件", url);
+		}
+    </script>
+</body>
+</html>
